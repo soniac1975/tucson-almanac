@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tucson Almanac — what's on this month</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6EFE3;
+    --surface:#FFFFFF;
+    --ink:#2A2017;
+    --ink-soft:#6E6151;
+    --ink-faint:#9C8E7B;
+    --line:#E6DAC6;
+    --line-soft:#EFE6D6;
+
+    /* category accents — drawn from a Sonoran dusk palette */
+    --c-all:#B0832F;        /* ochre        */
+    --c-basketball:#D2582A; /* sunset orange*/
+    --c-music:#6B4FA0;      /* dusk violet  */
+    --c-food:#C0345F;       /* prickly pear */
+    --c-books:#3F7E6E;      /* mesquite     */
+    --c-wnba:#5B3A8C;       /* mercury purple */
+
+    --accent:var(--c-all);  /* swapped per active tab */
+    --radius:14px;
+    --shadow:0 1px 2px rgba(42,32,23,.05), 0 8px 24px -16px rgba(42,32,23,.25);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+
+  /* ---------- hero / horizon ---------- */
+  .hero{position:relative;margin:0 -20px;overflow:hidden}
+  .hero__sky{display:block;width:100%;height:auto}
+  .hero__title{
+    position:absolute;left:20px;bottom:18px;right:20px;
+    color:#fff;text-shadow:0 2px 14px rgba(60,28,10,.45);
+  }
+  .wordmark{
+    font-family:"Bricolage Grotesque",sans-serif;
+    font-weight:800;letter-spacing:-.02em;line-height:.95;
+    font-size:clamp(34px,8vw,56px);margin:0;
+  }
+  .tagline{
+    font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;margin:8px 0 0;opacity:.95;
+  }
+
+  /* ---------- month switcher ---------- */
+  .monthbar{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    margin:22px 0 18px;
+  }
+  .monthbar h2{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:700;
+    font-size:clamp(22px,5vw,30px);margin:0;min-width:14ch;text-align:center;
+    letter-spacing:-.01em;
+  }
+  .navbtn{
+    appearance:none;border:1px solid var(--line);background:var(--surface);
+    width:42px;height:42px;border-radius:50%;cursor:pointer;color:var(--ink);
+    font-size:18px;display:grid;place-items:center;transition:border-color .15s,transform .1s;
+  }
+  .navbtn:hover{border-color:var(--accent)}
+  .navbtn:active{transform:scale(.94)}
+  .today-link{
+    display:block;margin:-6px auto 18px;background:none;border:none;cursor:pointer;
+    font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.06em;
+    color:var(--ink-faint);text-decoration:underline;text-underline-offset:3px;
+  }
+  .today-link:hover{color:var(--accent)}
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    appearance:none;flex:0 0 auto;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);
+    padding:9px 15px;border-radius:999px;font-size:14px;font-weight:600;
+    font-family:"Inter",sans-serif;display:flex;align-items:center;gap:8px;
+    transition:border-color .15s,color .15s,background .15s;white-space:nowrap;
+  }
+  .tab .dot{width:9px;height:9px;border-radius:50%;background:var(--tab-c)}
+  .tab:hover{border-color:var(--tab-c)}
+  .tab[aria-selected="true"]{
+    background:var(--tab-c);border-color:var(--tab-c);color:#fff;
+  }
+  .tab[aria-selected="true"] .dot{background:rgba(255,255,255,.85)}
+
+  /* ---------- event list ---------- */
+  .count{
+    font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.05em;
+    color:var(--ink-faint);margin:18px 2px 10px;
+  }
+  .list{display:flex;flex-direction:column;gap:10px}
+
+  .event{
+    display:grid;grid-template-columns:64px 1fr;gap:16px;align-items:stretch;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;box-shadow:var(--shadow);
+    border-left:4px solid var(--ev-c);
+  }
+  .datetile{
+    text-align:center;border-right:1px solid var(--line-soft);padding-right:14px;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .datetile .wd{
+    font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ev-c);
+  }
+  .datetile .day{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:700;
+    font-size:30px;line-height:1;margin:2px 0;
+  }
+  .datetile .mo{
+    font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);
+  }
+  .ev__body{min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .ev__title{font-weight:600;font-size:16.5px;line-height:1.3;letter-spacing:-.005em}
+  .ev__title a{text-decoration:none}
+  .ev__title a:hover{text-decoration:underline;text-underline-offset:2px}
+  .ev__meta{
+    display:flex;flex-wrap:wrap;gap:6px 14px;
+    font-size:13.5px;color:var(--ink-soft);
+  }
+  .ev__meta span{display:inline-flex;align-items:center;gap:5px}
+  .ev__meta svg{width:14px;height:14px;flex:0 0 auto;color:var(--ink-faint)}
+  .chip{
+    align-self:flex-start;margin-top:2px;
+    font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--ev-c);
+    background:color-mix(in srgb,var(--ev-c) 12%,transparent);
+    padding:2px 8px;border-radius:6px;
+  }
+  .ev__note{font-size:12.5px;color:var(--ink-faint);font-style:italic}
+
+  /* ---------- empty ---------- */
+  .empty{
+    text-align:center;padding:48px 20px;color:var(--ink-soft);
+    border:1px dashed var(--line);border-radius:var(--radius);background:var(--surface);
+  }
+  .empty .em-sun{font-size:30px;margin-bottom:6px}
+  .empty h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;margin:0 0 4px}
+  .empty p{margin:0;font-size:14px}
+
+  /* ---------- footer ---------- */
+  .note{
+    margin-top:28px;padding:16px 18px;border-radius:var(--radius);
+    background:var(--surface);border:1px solid var(--line);
+    font-size:13px;color:var(--ink-soft);line-height:1.55;
+  }
+  .note b{color:var(--ink)}
+  .note .stamp{font-family:"DM Mono",monospace;font-size:11px;color:var(--ink-faint);letter-spacing:.05em}
+
+  @media (max-width:480px){
+    .event{grid-template-columns:56px 1fr;gap:12px;padding:12px}
+    .datetile{padding-right:10px}
+    .datetile .day{font-size:26px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+  :focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <!-- Sonoran horizon: setting sun + saguaro silhouettes -->
+    <svg class="hero__sky" viewBox="0 0 760 230" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Tucson desert horizon at dusk">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F2A65A"/>
+          <stop offset=".48" stop-color="#E2683B"/>
+          <stop offset="1" stop-color="#9E3B57"/>
+        </linearGradient>
+        <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#FFE9B8"/>
+          <stop offset="1" stop-color="#FFC36B"/>
+        </radialGradient>
+      </defs>
+      <rect width="760" height="230" fill="url(#sky)"/>
+      <circle cx="560" cy="150" r="58" fill="url(#sun)" opacity=".95"/>
+      <!-- distant ridge -->
+      <path d="M0 188 L120 168 L240 182 L380 162 L520 180 L660 160 L760 176 L760 230 L0 230 Z" fill="#7E2E4A" opacity=".55"/>
+      <!-- foreground ground -->
+      <path d="M0 206 L760 206 L760 230 L0 230 Z" fill="#5E2238"/>
+      <!-- saguaros -->
+      <g fill="#3A1726">
+        <path d="M86 206 v-58 a6 6 0 0 1 12 0 v58 z M86 168 q-14 0 -14 16 v8 q0 4 6 4 t6 -4 v-6 q0-8 2-8 z M98 160 q14 0 14 16 v10 q0 4 -6 4 t-6 -4 v-8 q0-8 -2-8 z"/>
+        <path d="M150 206 v-40 a5 5 0 0 1 10 0 v40 z M150 176 q-11 0 -11 13 v6 q0 3 5 3 t5 -3 v-5 q0-7 1-7 z"/>
+        <path d="M690 206 v-50 a5.5 5.5 0 0 1 11 0 v50 z M701 170 q12 0 12 14 v8 q0 4 -5 4 t-5 -4 v-6 q0-7 -2-7 z"/>
+      </g>
+    </svg>
+    <div class="hero__title">
+      <h1 class="wordmark">Tucson<br>Almanac</h1>
+      <p class="tagline">Mercury in Phoenix · Wildcats in Tucson</p>
+    </div>
+  </header>
+
+  <div class="monthbar">
+    <button class="navbtn" id="prev" aria-label="Previous month">‹</button>
+    <h2 id="monthLabel">—</h2>
+    <button class="navbtn" id="next" aria-label="Next month">›</button>
+  </div>
+  <button class="today-link" id="todayBtn">Jump to this month</button>
+
+  <div class="tabs" role="tablist" aria-label="Event categories" id="tabs"></div>
+
+  <p class="count" id="count" aria-live="polite"></p>
+  <div class="list" id="list" role="region" aria-label="Events"></div>
+
+  <div class="note">
+    <p style="margin:0 0 8px"><b>About this calendar.</b> Schedules load live from ESPN every time you open this page — two auto-updating sources: <b>WNBA · Mercury</b> and <b>Basketball · Wildcats</b> (Arizona women). The Wildcats list fills during their season (Nov–Mar); off-season you'll mainly see Mercury games.</p>
+    <p class="stamp" id="stamp"></p>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   EVENTS  —  edit this list to add/remove events.
+   Fields:
+     cat      : "basketball" | "music" | "food" | "books" | "wnba"
+     title    : event name
+     date     : "YYYY-MM-DD"  (local Arizona date)
+     time     : display string, e.g. "7:00 PM"  (leave "" if all-day)
+     location : where it happens
+     url      : optional link (or "")
+     note     : optional small line (or "")
+   This list is a FALLBACK SEED. On load the page fetches the live schedules
+   from ESPN and replaces it. If ESPN can't be reached, this seed is shown.
+   ===================================================================== */
+let EVENTS = [
+  /* ---- WNBA · Phoenix Mercury (fallback seed) ---- */
+  {cat:"wnba", title:"Mercury vs Seattle Storm",        date:"2026-07-02", time:"7:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury vs Chicago Sky",          date:"2026-07-07", time:"7:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury vs Indiana Fever",        date:"2026-07-09", time:"7:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury @ Las Vegas Aces",        date:"2026-07-11", time:"3:00 PM",  location:"Away — Las Vegas, NV",      url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury @ Minnesota Lynx",        date:"2026-07-13", time:"6:00 PM",  location:"Away — Minneapolis, MN",    url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury vs Connecticut Sun",      date:"2026-07-17", time:"7:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury vs Connecticut Sun",      date:"2026-07-19", time:"4:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury @ Los Angeles Sparks",    date:"2026-07-22", time:"12:00 PM", location:"Away — Los Angeles, CA",    url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury vs Golden State Valkyries",date:"2026-07-29",time:"7:00 PM",  location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury vs New York Liberty",     date:"2026-08-01", time:"12:00 PM", location:"Footprint Center, Phoenix", url:"", note:"Home game"},
+  {cat:"wnba", title:"Mercury @ Chicago Sky",           date:"2026-08-03", time:"6:00 PM",  location:"Away — Chicago, IL",        url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury @ Atlanta Dream",         date:"2026-08-05", time:"4:00 PM",  location:"Away — Atlanta, GA",        url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury @ Connecticut Sun",       date:"2026-08-07", time:"4:30 PM",  location:"Away — Uncasville, CT",     url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury @ Washington Mystics",    date:"2026-08-09", time:"12:00 PM", location:"Away — Washington, DC",     url:"", note:"Road game"},
+  {cat:"wnba", title:"Mercury @ Los Angeles Sparks",    date:"2026-08-11", time:"7:00 PM",  location:"Away — Los Angeles, CA",    url:"", note:"Road game"},
+
+  /* ---- Basketball · Arizona Wildcats (women) ---- */
+  /* Se llena con el script semanal (ESPN, equipo 12). Vacío por ahora:
+     la temporada NCAA femenil va de noviembre a marzo. */
+];
+
+/* ---- category config (order = tab order) ---- */
+const CATS = [
+  {key:"all",        label:"All",                   cssvar:"--c-all"},
+  {key:"basketball", label:"Basketball · Wildcats", cssvar:"--c-basketball"},
+  {key:"wnba",       label:"WNBA · Mercury",        cssvar:"--c-wnba"},
+];
+
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+const MONTHS_ABBR = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const WEEKDAYS = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+
+/* parse "YYYY-MM-DD" as a LOCAL date (avoids UTC off-by-one) */
+function parseDate(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);}
+
+const now = new Date();
+let state = {cat:"all", year:now.getFullYear(), month:now.getMonth()};
+
+const icoClock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const icoPin   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+
+const tabsEl=document.getElementById("tabs");
+const listEl=document.getElementById("list");
+const countEl=document.getElementById("count");
+const labelEl=document.getElementById("monthLabel");
+
+function catColor(key){
+  const c=CATS.find(x=>x.key===key);
+  return getComputedStyle(document.documentElement).getPropertyValue(c.cssvar).trim();
+}
+
+function buildTabs(){
+  CATS.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="tab";b.role="tab";b.id="tab-"+c.key;
+    b.style.setProperty("--tab-c","var("+c.cssvar+")");
+    b.setAttribute("aria-selected", c.key===state.cat);
+    b.innerHTML=(c.key==="all"?"":'<span class="dot"></span>')+c.label;
+    b.addEventListener("click",()=>{state.cat=c.key;render();});
+    tabsEl.appendChild(b);
+  });
+}
+
+function render(){
+  // theme accent follows active category
+  const activeVar = CATS.find(c=>c.key===state.cat).cssvar;
+  document.documentElement.style.setProperty("--accent","var("+activeVar+")");
+
+  tabsEl.querySelectorAll(".tab").forEach(t=>{
+    t.setAttribute("aria-selected", t.id==="tab-"+state.cat);
+  });
+
+  labelEl.textContent = MONTHS[state.month]+" "+state.year;
+
+  const items = EVENTS
+    .filter(e => (state.cat==="all" || e.cat===state.cat))
+    .filter(e => {const d=parseDate(e.date);return d.getFullYear()===state.year && d.getMonth()===state.month;})
+    .sort((a,b)=> a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""));
+
+  countEl.textContent = items.length
+    ? items.length+(items.length===1?" event":" events")+" this month"
+    : "";
+
+  if(!items.length){
+    listEl.innerHTML =
+      '<div class="empty"><div class="em-sun">☀️</div>'+
+      '<h3>Nothing on the books yet</h3>'+
+      '<p>No '+(state.cat==="all"?"":CATS.find(c=>c.key===state.cat).label.toLowerCase()+" ")+
+      'events listed for '+MONTHS[state.month]+'. Try another month, or add one to the list.</p></div>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(e=>{
+    const d=parseDate(e.date);
+    const color="var("+CATS.find(c=>c.key===e.cat).cssvar+")";
+    const catLabel=CATS.find(c=>c.key===e.cat).label;
+    const titleHtml = e.url
+      ? '<a href="'+e.url+'" target="_blank" rel="noopener">'+escapeHtml(e.title)+'</a>'
+      : escapeHtml(e.title);
+    const timeHtml = e.time ? '<span>'+icoClock+escapeHtml(e.time)+'</span>' : '<span>'+icoClock+'All day</span>';
+    return ''+
+      '<article class="event" style="--ev-c:'+color+'">'+
+        '<div class="datetile">'+
+          '<div class="wd">'+WEEKDAYS[d.getDay()]+'</div>'+
+          '<div class="day">'+d.getDate()+'</div>'+
+          '<div class="mo">'+MONTHS_ABBR[d.getMonth()]+'</div>'+
+        '</div>'+
+        '<div class="ev__body">'+
+          '<span class="chip">'+escapeHtml(catLabel)+'</span>'+
+          '<div class="ev__title">'+titleHtml+'</div>'+
+          '<div class="ev__meta">'+timeHtml+
+            '<span>'+icoPin+escapeHtml(e.location)+'</span>'+
+          '</div>'+
+          (e.note?'<div class="ev__note">'+escapeHtml(e.note)+'</div>':'')+
+        '</div>'+
+      '</article>';
+  }).join("");
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function shiftMonth(delta){
+  let m=state.month+delta, y=state.year;
+  if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+  state.month=m;state.year=y;render();
+}
+
+document.getElementById("prev").addEventListener("click",()=>shiftMonth(-1));
+document.getElementById("next").addEventListener("click",()=>shiftMonth(1));
+document.getElementById("todayBtn").addEventListener("click",()=>{
+  state.month=now.getMonth();state.year=now.getFullYear();render();
+});
+
+// keyboard left/right arrows on the tablist move between tabs
+tabsEl.addEventListener("keydown",e=>{
+  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
+  const i=CATS.findIndex(c=>c.key===state.cat);
+  const ni=(i+(e.key==="ArrowRight"?1:-1)+CATS.length)%CATS.length;
+  state.cat=CATS[ni].key;render();
+  document.getElementById("tab-"+state.cat).focus();
+});
+
+/* ===================================================================
+   LIVE DATA — fetched from ESPN's public API every time the page opens.
+   No server needed. Falls back to the built-in seed if ESPN is unreachable.
+   =================================================================== */
+const AUTO_TEAMS = [
+  {league:"wnba",                      id:"11", cat:"wnba",       name:"Mercury",  homeVenue:"Footprint Center, Phoenix"},
+  {league:"womens-college-basketball", id:"12", cat:"basketball", name:"Wildcats", homeVenue:"McKale Center, Tucson"},
+];
+const AZ_OFFSET_HOURS = -7;  // Arizona is UTC-7 all year (no daylight saving)
+
+function toArizona(d){ return new Date(d.getTime() + AZ_OFFSET_HOURS*3600000); }
+function fmtTime(h,m){ const ap=h>=12?"PM":"AM"; let hh=h%12; if(hh===0)hh=12; return hh+":"+(m<10?"0"+m:m)+" "+ap; }
+
+async function fetchTeamSchedule(cfg){
+  const url="https://site.api.espn.com/apis/site/v2/sports/basketball/"+cfg.league+"/teams/"+cfg.id+"/schedule";
+  const res=await fetch(url);
+  if(!res.ok) throw new Error("HTTP "+res.status+" for "+cfg.name);
+  const data=await res.json();
+  return (data.events||[]).map(function(ev){
+    const comp=(ev.competitions||[])[0]; if(!comp) return null;
+    const cs=comp.competitors||[];
+    const home=cs.find(c=>c.homeAway==="home"), away=cs.find(c=>c.homeAway==="away");
+    if(!home||!away) return null;
+    const isHome=String(home.team&&home.team.id)===String(cfg.id);
+    const opp=isHome?away:home;
+    const oppName=(opp.team&&(opp.team.displayName||opp.team.name))||"TBD";
+    const az=toArizona(new Date(ev.date));
+    return {
+      cat:cfg.cat,
+      title:isHome?(cfg.name+" vs "+oppName):(cfg.name+" @ "+oppName),
+      date:az.toISOString().slice(0,10),
+      time:fmtTime(az.getUTCHours(),az.getUTCMinutes()),
+      location:isHome?((comp.venue&&comp.venue.fullName)||cfg.homeVenue)
+                     :("Away — "+((opp.team&&opp.team.location)||oppName)),
+      url:"", note:isHome?"Home game":"Road game"
+    };
+  }).filter(Boolean);
+}
+
+const stampEl=document.getElementById("stamp");
+function setStamp(msg){ stampEl.textContent=msg; }
+
+async function refreshFromESPN(){
+  try{
+    const lists=await Promise.all(AUTO_TEAMS.map(fetchTeamSchedule));
+    const live=lists.flat();
+    if(live.length){ EVENTS=live; render(); }
+    const t=new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+    setStamp("Live from ESPN · updated "+t+" · refreshes every time you open the page.");
+  }catch(err){
+    console.warn("ESPN fetch failed, showing built-in schedule:",err);
+    setStamp("Couldn't reach ESPN right now — showing the built-in schedule. Reload to try again.");
+  }
+}
+
+/* ---- boot ---- */
+setStamp("Loading live schedule from ESPN…");
+buildTabs();
+render();            // show the fallback seed instantly
+refreshFromESPN();   // then replace it with live data
+</script>
+</body>
+</html>
