@@ -215,7 +215,7 @@
     </svg>
     <div class="hero__title">
       <h1 class="wordmark">Tucson<br>Almanac</h1>
-      <p class="tagline">Mercury in Phoenix · Wildcats in Tucson</p>
+      <p class="tagline">Mercury & Wildcats hoops · Tucson food & drink</p>
     </div>
   </header>
 
@@ -232,7 +232,7 @@
   <div class="list" id="list" role="region" aria-label="Events"></div>
 
   <div class="note">
-    <p style="margin:0 0 8px"><b>About this calendar.</b> Schedules load live from ESPN every time you open this page — two auto-updating sources: <b>WNBA · Mercury</b> and <b>Basketball · Wildcats</b> (Arizona women). The Wildcats list fills during their season (Nov–Mar); off-season you'll mainly see Mercury games.</p>
+    <p style="margin:0 0 8px"><b>About this calendar.</b> Everything loads live each time you open this page — basketball from <b>ESPN</b> (WNBA · Mercury and Wildcats women) and food &amp; drink from <b>Tucson Foodie</b>. The Wildcats list fills during their season (Nov–Mar); off-season you'll mainly see Mercury games and food events.</p>
     <p class="stamp" id="stamp"></p>
   </div>
 
@@ -271,8 +271,23 @@ let EVENTS = [
   {cat:"wnba", title:"Mercury @ Los Angeles Sparks",    date:"2026-08-11", time:"7:00 PM",  location:"Away — Los Angeles, CA",    url:"", note:"Road game"},
 
   /* ---- Basketball · Arizona Wildcats (women) ---- */
-  /* Se llena con el script semanal (ESPN, equipo 12). Vacío por ahora:
+  /* Se llena en vivo desde ESPN (equipo 12). Vacío fuera de temporada:
      la temporada NCAA femenil va de noviembre a marzo. */
+
+  /* ---- Food · Tucson Foodie (fallback seed; live-refreshed on load) ---- */
+  {cat:"food", title:"Chill at the Mill Happy Hour", date:"2026-07-03", time:"3:00 PM", location:"Queen Creek Olive Mill", url:"https://tucsonfoodie.com/event/chill-at-the-mill-happy-hour-specials-2/", note:"Tucson Foodie"},
+  {cat:"food", title:"Stars, Stripes & Sunset — America 250", date:"2026-07-04", time:"6:00 PM", location:"Arizona Inn", url:"https://tucsonfoodie.com/event/stars-stripes-and-sunset-an-america-250-celebration-at-the-arizona-inn/", note:"$65"},
+  {cat:"food", title:"10th Annual Red, White & Brew", date:"2026-07-05", time:"7:00 PM", location:"Hacienda Del Sol Guest Ranch Resort", url:"https://tucsonfoodie.com/event/10th-annual-redwhite-brew/", note:"$85"},
+  {cat:"food", title:"Before I Get Sillier — Premiere & Cocktail Hour", date:"2026-07-11", time:"5:30 PM", location:"The Loft Cinema", url:"https://tucsonfoodie.com/event/before-i-get-sillier-documentary-premiere-cocktail-hour/", note:"Tucson Foodie"},
+  {cat:"food", title:"Foodie Field Trip: Wine & Mead Dinner", date:"2026-07-11", time:"6:00 PM", location:"The Meading Room", url:"https://tucsonfoodie.com/event/foodie-field-trip-wine-mead-dinner-with-chef-christian/", note:"$100"},
+  {cat:"food", title:"When Harry Met Sally + Dine-in Experience", date:"2026-07-11", time:"7:30 PM", location:"Fox Tucson Theatre", url:"https://tucsonfoodie.com/event/din-in-movie-fox-theatre/", note:"Tucson Foodie"},
+  {cat:"food", title:"Iron Chef Tucson 2026", date:"2026-07-18", time:"1:00 PM", location:"Desert Diamond Casino — Sahuarita", url:"https://tucsonfoodie.com/event/chef-battle-iron-chef/", note:"$60–$85"},
+  {cat:"food", title:"Ratatouille + Dine-in Experience", date:"2026-07-19", time:"2:00 PM", location:"Fox Tucson Theatre", url:"https://tucsonfoodie.com/event/dine-in-movie-ratatouille-fox-theatre/", note:"Tucson Foodie"},
+  {cat:"food", title:"Soar into Twilight — Five-Course Wine Dinner", date:"2026-07-23", time:"5:30 PM", location:"Tohono Chul Garden Bistro", url:"https://tucsonfoodie.com/event/soar-into-twilight-a-five-course-paired-wine-dinner/", note:"$135"},
+  {cat:"food", title:"Sideways + Dine-in Experience", date:"2026-08-01", time:"7:30 PM", location:"Fox Tucson Theatre", url:"https://tucsonfoodie.com/event/dine-in-fox-theatre-sideways/", note:"Tucson Foodie"},
+  {cat:"food", title:"America's Best Mexican Food Festival", date:"2026-08-08", time:"6:00 PM", location:"Westin La Paloma Resort & Spa", url:"https://tucsonfoodie.com/event/festival-mexico-food/", note:"$115–$150"},
+  {cat:"food", title:"Pueblos del Maíz 2026", date:"2026-09-24", time:"", location:"Tucson", url:"https://tucsonfoodie.com/event/pueblos-de-maiz-food-vendors-chefs-live-music/", note:"Sep 24–27"},
+  {cat:"food", title:"House Party 2026 @ Ronald McDonald House", date:"2026-10-09", time:"6:30 PM", location:"Ronald McDonald House", url:"https://tucsonfoodie.com/event/charity-ronald-mc-donald-party/", note:"Tucson Foodie"},
 ];
 
 /* ---- category config (order = tab order) ---- */
@@ -280,6 +295,7 @@ const CATS = [
   {key:"all",        label:"All",                   cssvar:"--c-all"},
   {key:"basketball", label:"Basketball · Wildcats", cssvar:"--c-basketball"},
   {key:"wnba",       label:"WNBA · Mercury",        cssvar:"--c-wnba"},
+  {key:"food",       label:"Food · Tucson Foodie",  cssvar:"--c-food"},
 ];
 
 const MONTHS = ["January","February","March","April","May","June","July",
@@ -436,27 +452,69 @@ async function fetchTeamSchedule(cfg){
   }).filter(Boolean);
 }
 
+function decodeHtml(s){ const t=document.createElement("textarea"); t.innerHTML=s||""; return t.value; }
+
+/* ---- Food schedule from Tucson Foodie (The Events Calendar REST API) ---- */
+async function fetchFoodEvents(){
+  const today=new Date().toISOString().slice(0,10);
+  const url="https://tucsonfoodie.com/wp-json/tribe/events/v1/events?per_page=50&start_date="+today;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error("HTTP "+res.status+" food");
+  const data=await res.json();
+  return (data.events||[]).map(function(ev){
+    const sd=ev.start_date_details||{};
+    let time="";  // Tucson Foodie times are already Arizona local
+    if(!ev.all_day && sd.hour!=null){ time=fmtTime(parseInt(sd.hour,10), parseInt(sd.minutes||"0",10)); }
+    const venueName=(ev.venue && (ev.venue.venue||ev.venue.address)) || "Tucson";
+    return {
+      cat:"food",
+      title:decodeHtml(ev.title||"Food event"),
+      date:String(ev.start_date||"").slice(0,10),
+      time:time,
+      location:decodeHtml(venueName),
+      url:ev.url||"",
+      note:decodeHtml(ev.cost ? String(ev.cost) : "Tucson Foodie")
+    };
+  }).filter(function(e){ return e.date; });
+}
+
 const stampEl=document.getElementById("stamp");
 function setStamp(msg){ stampEl.textContent=msg; }
 
-async function refreshFromESPN(){
+async function refreshLive(){
+  let hoopsOK=false, foodOK=false;
+
+  // Mercury (WNBA) + Wildcats (NCAA) from ESPN
   try{
     const lists=await Promise.all(AUTO_TEAMS.map(fetchTeamSchedule));
     const live=lists.flat();
-    if(live.length){ EVENTS=live; render(); }
-    const t=new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
-    setStamp("Live from ESPN · updated "+t+" · refreshes every time you open the page.");
-  }catch(err){
-    console.warn("ESPN fetch failed, showing built-in schedule:",err);
-    setStamp("Couldn't reach ESPN right now — showing the built-in schedule. Reload to try again.");
-  }
+    if(live.length){
+      EVENTS=EVENTS.filter(e=>e.cat!=="wnba"&&e.cat!=="basketball").concat(live);
+      hoopsOK=true; render();
+    }
+  }catch(err){ console.warn("ESPN fetch failed, keeping built-in hoops:",err); }
+
+  // Food from Tucson Foodie
+  try{
+    const food=await fetchFoodEvents();
+    if(food.length){
+      EVENTS=EVENTS.filter(e=>e.cat!=="food").concat(food);
+      foodOK=true; render();
+    }
+  }catch(err){ console.warn("Tucson Foodie fetch failed, keeping built-in food:",err); }
+
+  const t=new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+  setStamp("Updated "+t+" — "+
+    (hoopsOK?"basketball live from ESPN":"basketball from built-in list")+", "+
+    (foodOK?"food live from Tucson Foodie":"food from built-in list")+
+    ". Refreshes each time you open the page.");
 }
 
 /* ---- boot ---- */
-setStamp("Loading live schedule from ESPN…");
+setStamp("Loading live schedules…");
 buildTabs();
-render();            // show the fallback seed instantly
-refreshFromESPN();   // then replace it with live data
+render();         // show the built-in seed instantly
+refreshLive();    // then replace with live data from ESPN + Tucson Foodie
 </script>
 </body>
 </html>
